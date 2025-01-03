@@ -1,0 +1,7 @@
+
+adb -s emulator-5554 shell input tap 35 115     
+adb -s emulator-5554 shell input tap 1554 37    
+
+Checking for Advertisement...
+The word 'FREE' is present at location: (1318, 595), width: 86, height: 28.
+ADB Command Executed: adb -s emulator-5554 shell input tap 1778 43
