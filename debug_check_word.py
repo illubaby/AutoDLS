@@ -4,7 +4,7 @@ import os
 
 def is_continue(adb_device_id):
     # Load the image
-    image_path = 'image.png'
+    image_path = 'screenshot.png'
     image = Image.open(image_path)
 
     # Extract text with bounding box information
@@ -20,7 +20,7 @@ def is_continue(adb_device_id):
             center_x = x + w // 2
             center_y = y + h // 2
             print(f"Simulating touch at: ({center_x}, {center_y})")
-
+            
             # Send ADB command to tap at the calculated position
             adb_command = f"adb -s {adb_device_id} shell input tap {center_x} {center_y}"
             os.system(adb_command)
