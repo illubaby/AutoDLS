@@ -6,21 +6,17 @@ from global_variables import adb_device_id, screenshot_path
 from library.capture import crop_screenshot, capture_screenshot
 import cv2
 import time
+from fsm.tasks import is_continue, is_advertisement,is_advertisement_1, is_new_tier, is_quickly_end, down_tier, is_disconnected, enter_match, is_advertisement_2
 class GameModel:
     """
     Holds condition methods and any other data relevant to the state machine.
     """
     def __init__(self):
-        # Keep track of how many times we've seen "CONTINUE"
-        self.continue_count = 0
         self.tier = 13
-    def check_tier(self, screenshot_path=None, adb_device_id=None):
+    def is_LiveMatch_cond(self, screenshot_path=None, adb_device_id=None):
         """
-        1) If screenshot_path is not given, fallback to the global screenshot_path.
-        2) Crop the screenshot to the region containing the tier number.
-        3) Convert to grayscale & apply threshold to enhance OCR accuracy.
-        4) Use Tesseract with digit-only whitelist to read the number.
-        5) Store and return the numeric tier in self.tier.
+        Checks and updates the tier based on OCR results from a screenshot.
+        Returns True if the tier was updated successfully, False otherwise.
         """
 
         # Fallbacks if None provided
@@ -36,14 +32,12 @@ class GameModel:
         # Crop the region
         cropped_path = crop_screenshot(screenshot_path, output_path, crop_box)
         if not cropped_path:
-            print("Cropping failed or returned None.")
-            return None
+            return False
 
         # 2) Load cropped image with OpenCV
         img = cv2.imread(output_path, cv2.IMREAD_COLOR)
         if img is None:
-            print(f"Could not load {output_path} with OpenCV.")
-            return None
+            return False
 
         # 3) Convert to grayscale & apply Otsu threshold
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -54,118 +48,61 @@ class GameModel:
 
         # Tesseract config for digits
         custom_config = r"--oem 3 --psm 7 -c tessedit_char_whitelist=0123456789"
-        extracted_text = pytesseract.image_to_string(pil_img, config=custom_config)
-        extracted_text = extracted_text.strip()
+        extracted_text = pytesseract.image_to_string(pil_img, config=custom_config).strip()
 
-        # 5) Parse as a float (or int), store in self.tier
+        # 5) Parse as a float (or int) and update the tier
         try:
             tier_value = float(extracted_text)
+            if hasattr(self, 'tier') and self.tier == tier_value:
+                return False  # No update needed
             self.tier = tier_value
-            print(f"Detected tier: {tier_value}")
-            return tier_value
+            return False
         except ValueError:
-            print(f"Could not parse a numeric tier from OCR: '{extracted_text}'")
-            return None
+            print("This is Live Match !")
+            return True
+
     @staticmethod
-    def is_LiveEvents_end_cond(image_path=None):
-        """
-        Checks if the given image contains the words 'SCORED' and 'CONCEDED'.
 
-        Args:
-            image_path (str): Path to the screenshot image (default is screenshot_path from global_variables).
-
-        Returns:
-            bool: True if 'SCORED' and 'CONCEDED' is found, False otherwise.
-        """
-        if image_path is None:
-            # fallback to a default if not provided
-            image_path = screenshot_path
-
+    def is_LiveEvents_cond(image_path=None):
+        output_path = "cropped_screenshot.png"  # Path to save the cropped screenshot
+        crop_box = (1341, 5, 1502, 28)  # Define the cropping region (left, top, right, bottom
+        cropped_path = crop_screenshot(screenshot_path, output_path, crop_box)
+        # if cropped_path:
+        #     print("Cropping successful.")
+        # else:
+        #     print("Cropping failed.")
         try:
-            image = Image.open(image_path)
-            extracted_text = pytesseract.image_to_string(image).upper()
+            image = Image.open(output_path)
+            extracted_text = pytesseract.image_to_string(image)
 
-            if "SCORED" in extracted_text and "CONCEDED" in extracted_text:
-                print("The image contains the word 'SCORED' and 'CONCEDED'.")
-                # Example: tap screen
-                adb_command = f"adb -s {adb_device_id} shell input tap 403 413"
-                os.system(adb_command)
+            if "OUT DI THANG NGU" in extracted_text:
+                print("This is Live Events.")
                 return True
             else:
                 return False
         except Exception as e:
             print(f"Error processing the image: {e}")
             return False
-    def is_LiveMatch_end_cond(self, image_path=None):
-        """
-        Checks if 'CONTINUE' appears in the cropped screenshot. If it does:
-        1) Tap the 'CONTINUE' button
-        2) Capture (or open) a new screenshot
-        3) Check if 'MULTIPLIER' is present
-            -> if yes, return True for the transition from LiveEvents_Match to LiveEvents_PreMatch
-            -> otherwise, return False
-        """
-        output_path = "cropped_screenshot.png"    # Path to save the cropped screenshot
-        crop_box = (1287, 815, 1569, 880)         # (left, top, right, bottom) region for "CONTINUE"
-        
-        # If no custom image path is provided, use the global screenshot_path
-        if image_path is None:
-            image_path = screenshot_path
-
-        # 1) Crop the screenshot for "CONTINUE"
-        cropped_path = crop_screenshot(image_path, output_path, crop_box)
-        if not cropped_path:
-            # Crop failed for some reason
-            return False
-
+    def on_enter_LiveEvents_PreMatch(self):
         try:
-            # Check if the cropped image has "CONTINUE"
-            with Image.open(output_path) as image:
-                extracted_text = pytesseract.image_to_string(image).upper()
-
-            if "CONTINUE" in extracted_text:
-                print("Detected 'CONTINUE' in the cropped region. Tapping on screen...")
-                # Tap the "CONTINUE" button
-                adb_command = f"adb -s {adb_device_id} shell input tap 1464 846"
-                os.system(adb_command)
-
-                # 2) After tapping, optionally capture a NEW screenshot 
-                #    so we can check for "MULTIPLIER" in the updated screen.                
-                time.sleep(5)
-                capture_screenshot(adb_device_id, screenshot_path)
-                cropped_path = crop_screenshot(image_path, output_path, crop_box)
-                # 3) Check if the new screenshot has "MULTIPLIER"
-                with Image.open(cropped_path) as new_image:
-                    new_extracted_text = pytesseract.image_to_string(new_image).upper()
-                if "CONTINUE" not in new_extracted_text:
-                    print("Trigger FSM transition.")
-                    return True
-                else:
-                    print("Transition not triggered.")
-                    return False
-
-            # "CONTINUE" wasn't found in the cropped region -> no tap, no transition
-            return False
-
+            self.is_LiveMatch()
         except Exception as e:
-            print(f"Error in is_LiveMatch_end_cond: {e}")
-            return False
-
-    def is_disconnected_cond(image_path=None):
+            print(f"An error occurred: {e}")
+        enter_match()
+        is_advertisement()
+        is_advertisement_1()
+        is_advertisement_2()
+        is_new_tier()
+        is_disconnected()
+    def on_enter_LiveEvents_Match(self):
+        """
+        Called when entering the 'LiveEvents_Match' state.
+        """
         try:
-            image = Image.open(screenshot_path)
-            extracted_text = pytesseract.image_to_string(image).upper()
-
-            if "DISCONNECTED" in extracted_text:
-                print("The image contains the word DISCONNECTED.")
-                # Example: tap screen
-                adb_command = f"adb -s {adb_device_id} shell input tap 784 463"
-                os.system(adb_command)
-                time.sleep(1)
-                adb_command = f"adb -s {adb_device_id} shell input tap 403 413"
-                os.system(adb_command)
-                return True
-            else:
-                return False
+            self.is_LiveEvents()
         except Exception as e:
-            print(f"Error processing the image: {e}")
+            print(f"An error occurred: {e}")
+        # if model.tier < 11:
+        #     down_tier()
+        is_continue()
+        is_quickly_end()

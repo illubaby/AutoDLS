@@ -20,5 +20,5 @@ def click_and_log_on_image(image_path):
     plt.show()
 
 # Path to your screenshot
-image_path = "End1.png"  # Replace with the path to your screenshot
+image_path = "screenshot.png"  # Replace with the path to your screenshot
 click_and_log_on_image(image_path)
