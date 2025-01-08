@@ -3,7 +3,7 @@
 
 # My Project
 
-A brief description or overview of your project. (e.g., "This project uses the `transitions` Python library to create and manage a finite state machine for an automated game flow.")
+This project is made for free Dream League Soccer automation play. Dont expect too much, because it just some basic click, dont have AI support to play this game.
 
 ---
 

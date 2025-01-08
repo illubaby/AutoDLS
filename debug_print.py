@@ -19,7 +19,7 @@ image = Image.open(image_path)
 extracted_text = pytesseract.image_to_string(image)
 
 # Check if the word "continue" is in the extracted text
-if "Failed to establish" in extracted_text:
+if "You" in extracted_text:
     print("The word is present in the image.")
 else:
     print("The word is NOT present in the image.")

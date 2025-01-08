@@ -6,7 +6,7 @@ from global_variables import adb_device_id, screenshot_path
 from library.capture import crop_screenshot, capture_screenshot
 import cv2
 import time
-from fsm.tasks import is_continue, is_advertisement,is_advertisement_1, is_new_tier, is_quickly_end, down_tier, is_disconnected, enter_match, is_advertisement_2
+from fsm.tasks import is_continue, is_advertisement,is_advertisement_1, is_new_tier, is_quickly_end, down_tier, is_disconnected,is_disconnected_1,is_disconnected_2, enter_match, is_advertisement_2, is_advertisement_3, is_play, is_play_1, is_resume
 class GameModel:
     """
     Holds condition methods and any other data relevant to the state machine.
@@ -83,7 +83,28 @@ class GameModel:
         except Exception as e:
             print(f"Error processing the image: {e}")
             return False
+    def is_CareerPreMatch_cond(self):
+        output_path = "cropped_screenshot.png"  # Path to save the cropped screenshot
+        crop_box = (1341, 5, 1502, 28)  # Define the cropping region (left, top, right, bottom
+        cropped_path = crop_screenshot(screenshot_path, output_path, crop_box)
+        # if cropped_path:
+        #     print("Cropping successful.")
+        # else:
+        #     print("Cropping failed.")
+        try:
+            image = Image.open(output_path)
+            extracted_text = pytesseract.image_to_string(image)
+
+            if "OUT DI THANG NGU" in extracted_text:
+                print("This is CareerPreMatch.")
+                return True
+            else:
+                return False
+        except Exception as e:
+            print(f"Error processing the image: {e}")
+            return False
     def on_enter_LiveEvents_PreMatch(self):
+        print("Entered LiveEvents_PreMatch.")
         try:
             self.is_LiveMatch()
         except Exception as e:
@@ -94,10 +115,12 @@ class GameModel:
         is_advertisement_2()
         is_new_tier()
         is_disconnected()
+        is_disconnected_2()
     def on_enter_LiveEvents_Match(self):
         """
         Called when entering the 'LiveEvents_Match' state.
         """
+        print("Entered LiveEvents_Match.")
         try:
             self.is_LiveEvents()
         except Exception as e:
@@ -106,3 +129,29 @@ class GameModel:
         #     down_tier()
         is_continue()
         is_quickly_end()
+        is_disconnected_1()
+    def on_enter_Career_CareerPreMatch(self):
+        """
+        Called when entering the 'Career_CareerPreMatch' state.
+        """
+        print("Entered CareerPreMatch.")
+        if not self.is_CareerPreMatch_cond():
+            print("This is not CareerPreMatch.")
+            self.state = "Career_CareerMatch"
+        is_advertisement_3()
+        is_play()
+        is_play_1()
+        
+    def on_enter_Career_CareerMatch(self):
+        """
+        Called when entering the 'Career_CareerMatch' state.
+        """
+        print("Entered CareerMatch.")
+        try: 
+            self.is_CareerPreMatch()
+        except Exception as e:
+            print(f"An error occurred: {e}")
+        is_continue()
+        is_resume()
+        
+        

@@ -92,6 +92,22 @@ def is_advertisement_2(image_path=None):
             return False
     except Exception as e:
         print(f"Error processing the image: {e}")
+        return False
+def is_advertisement_3(image_path=None):
+    try:
+        image = Image.open(screenshot_path)
+        extracted_text = pytesseract.image_to_string(image).upper()
+
+        if "SPECIAL OFFER!" in extracted_text:
+            print("The image contains advertisement.")
+            # Example: tap screen
+            adb_command = f"adb -s {adb_device_id} shell input tap 1115 142"
+            os.system(adb_command)
+            return True
+        else:
+            return False
+    except Exception as e:
+        print(f"Error processing the image: {e}")
         return False    
 def is_new_tier(image_path=None):
     output_path = "cropped_screenshot.png"  # Path to save the cropped screenshot
@@ -114,30 +130,69 @@ def is_disconnected(image_path=None):
     try:
         image = Image.open(screenshot_path)
         extracted_text = pytesseract.image_to_string(image).upper()
-
         if "DISCONNECTED" in extracted_text:
             print("The image contains the word DISCONNECTED.")
             # Example: tap screen
             adb_command = f"adb -s {adb_device_id} shell input tap 784 463"
             os.system(adb_command)
             return True
-        elif "FAILED TO ESTABLISH" in extracted_text:
+        elif "FAILED TO ESTABLISH" in extracted_text or "FAILED TO CONNECT" in extracted_text:
             print("The image contains the word FAILED TO ESTABLISH.")
             # Example: tap screen
             adb_command = f"adb -s {adb_device_id} shell input tap 782 538"
             os.system(adb_command)
             return True
-        elif "NOT STABLE" in extracted_text:
+        elif "NOT STABLE" in extracted_text or "ERROR" in extracted_text:
             print("The image contains the word NOT STABLE.")
             # Example: tap screen
             adb_command = f"adb -s {adb_device_id} shell input tap 782 538"
+            os.system(adb_command)
+            return True
+        elif "YOU" in extracted_text and "MATCH" in extracted_text:
+            print("The image contains the word YOU MATCH.")
+            adb_command = f"adb -s {adb_device_id} shell input tap 795 501"
+            os.system(adb_command)    
+        else:   
+            return False
+    except Exception as e:
+        print(f"Error processing the image: {e}")
+def is_disconnected_1(image_path=None):
+    try:
+        image = Image.open(screenshot_path)
+        extracted_text = pytesseract.image_to_string(image)
+        if "communicating" in extracted_text:
+            print("The image contains the word communicating.")
+            # Example: tap screen
+            adb_command = f"adb -s {adb_device_id} shell input tap 584 542"
             os.system(adb_command)
             return True
         else:   
             return False
     except Exception as e:
         print(f"Error processing the image: {e}")
+def is_disconnected_2(image_path=None):
+    output_path = "cropped_screenshot.png"  # Path to save the cropped screenshot
+    crop_box = (571, 405, 1021, 446)  # Define the cropping region (left, top, right, bottom
+    cropped_path = crop_screenshot(screenshot_path, output_path, crop_box)
+    # if cropped_path:
+    #     print("Cropping successful.")
+    # else:
+    #     print("Cropping failed.")
+    try:
+        image = Image.open(output_path)
+        extracted_text = pytesseract.image_to_string(image)
 
+        if "Lost connection" in extracted_text:
+            print("The image contains the word Lost connection.")
+            # Example: tap screen
+            adb_command = f"adb -s {adb_device_id} shell input tap 805 497"
+            os.system(adb_command)
+            return True
+        else:
+            return False
+    except Exception as e:
+        print(f"Error processing the image: {e}")
+        return False
 #                          _      _           __  __       _       _                            
 #                         | |    (_)         |  \/  |     | |     | |                           
 #   ______ ______ ______  | |     ___   _____| \  / | __ _| |_ ___| |__    ______ ______ ______ 
@@ -166,15 +221,6 @@ def is_continue(image_path=None):
             os.system(adb_command)
             return True
         else:
-            capture_screenshot(adb_device_id, screenshot_path)
-            with Image.open(screenshot_path) as new_image:
-                new_extracted_text = pytesseract.image_to_string(new_image)
-        if "You" in new_extracted_text:
-            print("Someone forfeit the match.")
-            adb_command = f"adb -s {adb_device_id} shell input tap 793 501"
-            os.system(adb_command)
-            return True
-        else:
             return False
     except Exception as e:
         print(f"Error processing the image: {e}")
@@ -183,7 +229,7 @@ def is_quickly_end(image_path=None):
     try:
         image = Image.open(screenshot_path)
         extracted_text = pytesseract.image_to_string(image)
-        if "forfeits" in extracted_text or "concedes" in extracted_text or "lost" in extracted_text:
+        if "forfeits" in extracted_text or "concedes" in extracted_text or "lost" in extracted_text or "Your" in extracted_text:
             print("The match end quickly !")
             # Example: tap screen
             os.system(f"adb -s {adb_device_id} shell input tap 799 508")
@@ -219,3 +265,78 @@ def down_tier():
     except ValueError:
         print(f"Could not parse a numeric tier from OCR: '{extracted_text}'")
         return None
+#    _____                         _____          __  __       _       _     
+#   / ____|                       |  __ \        |  \/  |     | |     | |    
+#  | |     __ _ _ __ ___  ___ _ __| |__) | __ ___| \  / | __ _| |_ ___| |__  
+#  | |    / _` | '__/ _ \/ _ \ '__|  ___/ '__/ _ \ |\/| |/ _` | __/ __| '_ \ 
+#  | |___| (_| | | |  __/  __/ |  | |   | | |  __/ |  | | (_| | || (__| | | |
+#   \_____\__,_|_|  \___|\___|_|  |_|   |_|  \___|_|  |_|\__,_|\__\___|_| |_|                                                                           
+def is_play():
+    output_path = "cropped_screenshot.png"  # Path to save the cropped screenshot
+    crop_box = (29, 112, 128, 181)  # Define the cropping region (left, top, right, bottom
+    cropped_path = crop_screenshot(screenshot_path, output_path, crop_box)
+    # if cropped_path:
+    #     print("Cropping successful.")
+    # else:
+    #     print("Cropping failed.")
+    try:
+        image = Image.open(output_path)
+        extracted_text = pytesseract.image_to_string(image)
+
+        if "PLAY" in extracted_text or "NOW" in extracted_text:
+            print("The image contains the word play.")
+            # Example: tap screen
+            adb_command = f"adb -s {adb_device_id} shell input tap 358 261"
+            os.system(adb_command)
+            return True
+        else:
+            return False
+    except Exception as e:
+        print(f"Error processing the image: {e}")
+        return False
+def is_play_1():
+    output_path = "cropped_screenshot.png"  # Path to save the cropped screenshot
+    crop_box = (1408, 828, 1517, 869)  # Define the cropping region (left, top, right, bottom
+    cropped_path = crop_screenshot(screenshot_path, output_path, crop_box)
+    # if cropped_path:
+    #     print("Cropping successful.")
+    # else:
+    #     print("Cropping failed.")
+    try:
+        image = Image.open(output_path)
+        extracted_text = pytesseract.image_to_string(image)
+
+        if "PLAY" in extracted_text :
+            print("The image contains the word play.")
+            # Example: tap screen
+            adb_command = f"adb -s {adb_device_id} shell input tap 1444 846"
+            os.system(adb_command)
+            return True
+        else:
+            return False
+    except Exception as e:
+        print(f"Error processing the image: {e}")
+        return False
+def is_resume():
+    output_path = "cropped_screenshot.png"  # Path to save the cropped screenshot
+    crop_box = (1113, 732, 1268, 768)  # Define the cropping region (left, top, right, bottom
+    cropped_path = crop_screenshot(screenshot_path, output_path, crop_box)
+    # if cropped_path:
+    #     print("Cropping successful.")
+    # else:
+    #     print("Cropping failed.")
+    try:
+        image = Image.open(output_path)
+        extracted_text = pytesseract.image_to_string(image)
+
+        if "RESUME" in extracted_text :
+            print("The image contains the word RESUME.")
+            # Example: tap screen
+            adb_command = f"adb -s {adb_device_id} shell input tap 1165 744"
+            os.system(adb_command)
+            return True
+        else:
+            return False
+    except Exception as e:
+        print(f"Error processing the image: {e}")
+        return False                                                                                                                                                                

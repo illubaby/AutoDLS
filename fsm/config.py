@@ -12,14 +12,14 @@ states = [
             {'name': 'Match'}
         ]
     },
-    # {
-    #     'name': 'Career',
-    #     'initial': 'CareerPreMatch',
-    #     'children': [
-    #         {'name': 'CareerPreMatch'},
-    #         {'name': 'CareerMatch'}
-    #     ]
-    # }
+    {
+        'name': 'Career',
+        'initial': 'CareerPreMatch',
+        'children': [
+            {'name': 'CareerPreMatch'},
+            {'name': 'CareerMatch'}
+        ]
+    }
 ]
 
 # Define transitions
@@ -42,10 +42,10 @@ transitions = [
         'conditions': 'is_LiveEvents_cond'
     },
     # Career child transitions
-    # {'trigger': 'is_play_now', 'source': 'Career_CareerPreMatch', 'dest': 'Career_CareerMatch'},
-    # {
-    #     'trigger': 'go_back',
-    #     'source': 'Career_CareerMatch',
-    #     'dest': 'Career_CareerPreMatch'
-    # },
+    {
+        'trigger': 'is_CareerPreMatch',   
+        'source': 'Career_CareerMatch',
+        'dest': 'Career_CareerPreMatch',
+        'conditions': 'is_CareerPreMatch_cond'
+    },
 ]

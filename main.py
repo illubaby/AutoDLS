@@ -13,18 +13,24 @@ def main():
     # 1) Create model & machine
     model = GameModel()
     machine = Machine(model=model, states=states, transitions=transitions, initial='LiveEvents')
-    # machine = Machine(model=model, states=states, transitions=transitions, initial='LiveEvents_Match')  
+    # machine = Machine(model=model, states=states, transitions=transitions, initial='LiveEvents_Match')
+    # machine = Machine(model=model, states=states, transitions=transitions, initial='Career_CareerMatch')
+    # machine = Machine(model=model, states=states, transitions=transitions, initial='Career_CareerPreMatch')    
     # 2) Main loop
     while True:
         # Capture the screenshot (optional)
         capture_screenshot(adb_device_id, screenshot_path)
-        print("=====================================")
-        print(f"Current state: {model.state}")
+        # print("=====================================")
+        # print(f"Current state: {model.state}")
         # Now do tasks based on the current state
         if model.state == 'LiveEvents_PreMatch':
             model.on_enter_LiveEvents_PreMatch()
         elif model.state == 'LiveEvents_Match':
-            model.on_enter_LiveEvents_Match()        
+            model.on_enter_LiveEvents_Match()
+        elif model.state == 'Career_CareerPreMatch':
+            model.on_enter_Career_CareerPreMatch()
+        elif model.state == 'Career_CareerMatch':
+            model.on_enter_Career_CareerMatch()      
         # Sleep a bit and repeat
         time.sleep(2)
 
