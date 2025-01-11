@@ -3,17 +3,20 @@
 import time
 from transitions.extensions import HierarchicalMachine as Machine
 from transitions import MachineError
-
+import os
 from fsm.config import states, transitions
 from fsm.model import GameModel
 from library.capture import capture_screenshot
 from global_variables import adb_device_id, screenshot_path
 
 def main():
+    #Reset the adb server whenever the computer is restarted
+    os.system("adb kill-server")
+    os.system("adb start-server")
     # 1) Create model & machine
     model = GameModel()
-    machine = Machine(model=model, states=states, transitions=transitions, initial='LiveEvents')
-    # machine = Machine(model=model, states=states, transitions=transitions, initial='LiveEvents_Match')
+    # machine = Machine(model=model, states=states, transitions=transitions, initial='LiveEvents_PreMatch')
+    machine = Machine(model=model, states=states, transitions=transitions, initial='LiveEvents_Match')
     # machine = Machine(model=model, states=states, transitions=transitions, initial='Career_CareerMatch')
     # machine = Machine(model=model, states=states, transitions=transitions, initial='Career_CareerPreMatch')    
     # 2) Main loop

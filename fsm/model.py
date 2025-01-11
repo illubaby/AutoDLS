@@ -6,7 +6,7 @@ from global_variables import adb_device_id, screenshot_path
 from library.capture import crop_screenshot, capture_screenshot
 import cv2
 import time
-from fsm.tasks import is_continue, is_advertisement,is_advertisement_1, is_new_tier, is_quickly_end, down_tier, is_disconnected,is_disconnected_1,is_disconnected_2, enter_match, is_advertisement_2, is_advertisement_3, is_play, is_play_1, is_resume
+from fsm.tasks import is_continue, is_advertisement, is_new_tier, is_quickly_end, down_tier, is_disconnected,is_disconnected_1, enter_match, is_play, is_play_1, is_resume, is_sign_out, is_live_season, is_100_games
 class GameModel:
     """
     Holds condition methods and any other data relevant to the state machine.
@@ -105,40 +105,40 @@ class GameModel:
             return False
     def on_enter_LiveEvents_PreMatch(self):
         print("Entered LiveEvents_PreMatch.")
-        try:
-            self.is_LiveMatch()
-        except Exception as e:
-            print(f"An error occurred: {e}")
+        if not self.is_LiveEvents_cond():
+            print("This is not LiveEvents_PreMatch.")
+            self.state = "LiveEvents_Match"        
         enter_match()
+        is_sign_out()
+        is_live_season()
         is_advertisement()
-        is_advertisement_1()
-        is_advertisement_2()
         is_new_tier()
         is_disconnected()
-        is_disconnected_2()
+        is_disconnected_1()
+        is_100_games()
     def on_enter_LiveEvents_Match(self):
         """
         Called when entering the 'LiveEvents_Match' state.
         """
-        print("Entered LiveEvents_Match.")
+        # print("Entered LiveEvents_Match.")
         try:
             self.is_LiveEvents()
         except Exception as e:
             print(f"An error occurred: {e}")
-        # if model.tier < 11:
+        # if model.tier < 55:
         #     down_tier()
         is_continue()
         is_quickly_end()
+        is_disconnected()
         is_disconnected_1()
     def on_enter_Career_CareerPreMatch(self):
         """
         Called when entering the 'Career_CareerPreMatch' state.
         """
-        print("Entered CareerPreMatch.")
+        # print("Entered CareerPreMatch.")
         if not self.is_CareerPreMatch_cond():
             print("This is not CareerPreMatch.")
             self.state = "Career_CareerMatch"
-        is_advertisement_3()
         is_play()
         is_play_1()
         
@@ -146,7 +146,7 @@ class GameModel:
         """
         Called when entering the 'Career_CareerMatch' state.
         """
-        print("Entered CareerMatch.")
+        # print("Entered CareerMatch.")
         try: 
             self.is_CareerPreMatch()
         except Exception as e:
